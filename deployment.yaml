@@ -1,0 +1,43 @@
+# required
+apiVersion: apps/v1
+
+# required
+kind: Deployment
+
+# required
+metadata:
+  name: translatemymenu # deployment name
+  labels:
+    app: transmiimapp
+
+# if replica is not provided here
+# it is handled by Kubernetes
+spec:
+
+  replicas: 5
+
+  # required, specify label selector for pods
+  #selector=spec.temp.meta.labels=metadata.labels
+  selector:
+    matchLabels:
+      app: transmiimapp
+  
+  # pod template, same as pod template no kind etc
+  template:
+
+    metadata:
+      labels:
+        app: transmiimapp # run-HPA or app-reg
+
+    # container spec only
+    spec:
+      containers:
+      - name: transmiimcont # container name
+        image: amith1694/transmiim_test:v1
+        imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "1024m"
+        ports:
+        - containerPort: 8002
