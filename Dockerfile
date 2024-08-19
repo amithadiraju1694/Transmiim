@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
 
 # Cloning code into container from a public repository
 # cont_transmiim -> src, Docker, requirements.txt
-RUN git clone https://github.com/amithadiraju1694/Transmiim.git .
+RUN git clone -b feat_streamlit_gs https://github.com/amithadiraju1694/Transmiim.git .
 
 # 
 RUN pip3 install -r requirements.txt
@@ -25,4 +25,4 @@ EXPOSE 8501
 HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
 
 
-ENTRYPOINT [ "streamlit", "run", "/src/main.py", "--server.port=8501", "--server.address=0.0.0.0" ]
+ENTRYPOINT [ "streamlit", "run", "src/main.py", "--server.port=8501", "--server.address=0.0.0.0" ]
