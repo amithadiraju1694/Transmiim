@@ -22,6 +22,7 @@ RUN pip3 install -r requirements.txt
 # Expose this specific port to web traffic
 EXPOSE 8501
 
+# Telling docker on how to test if a container is still working
 HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
 
 
