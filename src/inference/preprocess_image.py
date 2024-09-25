@@ -1,6 +1,10 @@
 
 import numpy as np
 from typing import List, Tuple, Optional, AnyStr
+import nltk
+nltk.download("stopwords")
+nltk.download('punkt')
+
 from nltk.tokenize import RegexpTokenizer
 from nltk.corpus import stopwords
 import re
