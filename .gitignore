@@ -1,4 +1,6 @@
 misc.txt
 test_cas.py
 test_train_llm.py
+test.py
+menu_item_explanations/
 __pycache__

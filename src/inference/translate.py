@@ -5,9 +5,15 @@ from inference.preprocess_image import (
     process_extracted_text
 )
 
-import lorem
+from inference.config import INSTRUCTION_PROMPT, DEVICE
 from typing import List, Tuple, Optional, AnyStr, Dict
+from transformers import T5Tokenizer, T5ForConditionalGeneration
+import easyocr
 import time
+
+use_gpu = True
+if DEVICE == 'cpu': use_gpu = False
+
 
 # Define your extract_filter_img function
 def extract_filter_img(image, text_extractor) -> Dict:
@@ -52,21 +58,47 @@ def extract_filter_img(image, text_extractor) -> Dict:
         if i in ind_add_delays:
             time.sleep(0.5)
 
+    progress_bar.empty()
+    status_message.empty()
     return result
 
 
-def transcribe_menu_model(menu_texts: List[AnyStr], text_summarizer = None) -> Dict:
+def transcribe_menu_model(menu_texts: List[AnyStr],
+                          text_summarizer = None,
+                          text_tokenizer = None) -> Dict:
 
     summarized_menu_items = {}
 
     for mi in menu_texts:
-        # This will be replaced by a LLM model , to generate a 
-        # meaningful summary
         if not text_summarizer:
-            summarized_menu_items[mi] = lorem.sentence()
+            raise NotImplementedError(""" """)
+        
+        else:
+            prompt_item = INSTRUCTION_PROMPT + " " + mi + """
+
+
+"""
+            input_ids = text_tokenizer(prompt_item, return_tensors="pt").input_ids
+            
+            outputs = text_summarizer.generate(input_ids,
+                                               max_new_tokens = 512
+                                               )
+            
+            summarized_menu_items[mi] = text_tokenizer.decode(
+                outputs[0],
+                skip_special_tokens = True
+                )
     
     return summarized_menu_items
 
+def load_models(item_summarizer: AnyStr) -> Tuple:
+    text_extractor = easyocr.Reader(['en'],
+                                    gpu = use_gpu
+                                    )
+    tokenizer = T5Tokenizer.from_pretrained(item_summarizer)
+    model = T5ForConditionalGeneration.from_pretrained(item_summarizer)
+
+    return (text_extractor, tokenizer, model)
 
 def classify_menu_text(extrc_str: List[AnyStr]) -> List[AnyStr]:
     return extrc_str

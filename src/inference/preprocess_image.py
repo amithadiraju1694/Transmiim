@@ -36,6 +36,6 @@ def process_extracted_text(raw_extrc_text: List[Tuple]) -> List[AnyStr]:
         # remove all numbers, special characters from a string
         prcsd_txt = preprocess_text(extr_text)
 
-        if len(prcsd_txt) > 2: output_texts.append(prcsd_txt)
+        if len(prcsd_txt.split(" ") ) > 2: output_texts.append(prcsd_txt)
     
     return output_texts

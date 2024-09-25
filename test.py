@@ -1,34 +1,67 @@
-import cv2
-import easyocr
-import matplotlib.pyplot as plt
-import numpy as np
+import pandas as pd
+import transformers
+import torch
+from transformers import AutoTokenizer
 
-# read image
-image_path = '/Users/aadir00/Downloads/INDMEN.png'
+model = "meta-llama/Llama-2-7b-chat-hf"
 
-img = cv2.imread(image_path)
+tokenizer = AutoTokenizer.from_pretrained(model)
 
-print(type(img))
+pipeline = transformers.pipeline(
+    "text-generation",
+    model=model,
+    torch_dtype=torch.float16,
+    device_map="cpu",
+)
 
-# instance text detector
-reader = easyocr.Reader(['en'], gpu=False)
+dataset = pd.read_csv('/Users/amithadiraju/Desktop/Transmiim_Imgs/menu_item_exp_eng.csv',
+                         header=0)
 
-# detect text on image
-text_ = reader.readtext(img)
+def make_prompt(dataset, context_indices, text_to_summarize):
 
-print(type(text_), text_[0])
+    prompt = 'Given the item and its explanation like below-> '
+    for index in context_indices:
+        item = dataset.iloc[[index]]['item'].values[0]
+        explanation = dataset.iloc[[index]]['explanation'].values[0]
+        
+        # The stop sequence '{summary}\n\n\n' is important for FLAN-T5. Other models may have their own preferred stop sequence.
+        prompt += f"""
+                    Item:
+                        {item}
 
-threshold = 0.25
-# draw bbox and text
-for t_, t in enumerate(text_):
+                    Explanation:
+                        {explanation}
+
+
+                    """
     
-    bbox, text, score = t
+    
+    prompt += "Explain the below item similarly-> "
+    prompt += f"""
+                    Item:
+                        {text_to_summarize}
 
-    # if score > threshold:
-    #     cv2.rectangle(img, bbox[0], bbox[2], (0, 255, 0), 5)
-    #     cv2.putText(img, text, bbox[0], cv2.FONT_HERSHEY_COMPLEX, 0.65, (255, 0, 0), 2)
-    
-    # print(text, '--------------', '\n')
-    
-# plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-# plt.show()
+                    Explanation:
+                    """
+        
+    return prompt
+
+indices = [0,1,2]
+text_to_summarize = "bisibella bath"
+
+input_prompt = make_prompt(dataset = dataset,
+                           context_indices=indices,
+                           text_to_summarize=text_to_summarize
+                           )
+
+
+sequences = pipeline(
+    input_prompt,
+    do_sample=True,
+    top_k=30,
+    num_return_sequences=1,
+    eos_token_id=tokenizer.eos_token_id,
+    max_length=1024,
+)
+for seq in sequences:
+    print(f"Result: {seq['generated_text']}")
